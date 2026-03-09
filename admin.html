@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>乐造内部培训 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #FF6B35;
+            --secondary: #2E4057;
+            --accent: #048A81;
+            --light: #f5f5f5;
+            --dark: #333;
+        }
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: var(--light);
+            color: var(--dark);
+        }
+        .header {
+            background: var(--secondary);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 1.5rem; }
+        .header .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .login-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--secondary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            width: 350px;
+            text-align: center;
+        }
+        .login-box h2 { margin-bottom: 20px; color: var(--secondary); }
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .course-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .course-tab {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .course-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .section h3 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+        }
+        .qa-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .qa-item label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+        .qa-item textarea, .qa-item input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        .qa-item textarea { min-height: 60px; resize: vertical; }
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .price-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .price-item label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .price-item input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .hidden { display: none !important; }
+        .msg {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .msg.success { background: #d4edda; color: #155724; display: block; }
+        .msg.error { background: #f8d7da; color: #721c24; display: block; }
+        .preview-link {
+            display: inline-block;
+            margin-left: 20px;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .preview-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h2>🔐 管理后台登录</h2>
+            <input type="password" id="passwordInput" placeholder="请输入管理密码">
+            <button onclick="checkPassword()">登录</button>
+            <p style="margin-top:15px;font-size:0.85rem;color:#666;">默认密码: lezao2026</p>
+        </div>
+    </div>
+
+    <!-- 管理后台 -->
+    <div class="header" id="adminHeader" style="display:none;">
+        <h1>🏫 乐造内部培训 - 管理后台</h1>
+        <div>
+            <a href="https://yunque-dada.github.io/lezao-manual-web/" target="_blank" class="preview-link">👀 预览网站</a>
+            <button class="btn" onclick="saveData()">💾 保存并推送</button>
+            <button class="btn" onclick="logout()" style="background:#666;">退出</button>
+        </div>
+    </div>
+
+    <div class="container" id="adminContent" style="display:none;">
+        <div class="msg" id="msgBox"></div>
+
+        <!-- 课程选择 -->
+        <div class="course-tabs">
+            <button class="course-tab active" onclick="switchCourse('scratch')">Scratch编程</button>
+            <button class="course-tab" onclick="switchCourse('python')">Python编程</button>
+            <button class="course-tab" onclick="switchCourse('lego-duplo')">乐高大颗粒</button>
+            <button class="course-tab" onclick="switchCourse('lego-wedo')">乐高WeDo</button>
+            <button class="course-tab" onclick="switchCourse('settings')">⚙️ 网站设置</button>
+        </div>
+
+        <!-- Scratch课程编辑 -->
+        <div id="course-scratch" class="course-content">
+            <div class="section">
+                <h3>📝 课程介绍</h3>
+                <div class="qa-item">
+                    <label>课程名称</label>
+                    <input type="text" id="scratch-title" value="Scratch编程">
+                </div>
+                <div class="qa-item">
+                    <label>副标题</label>
+                    <input type="text" id="scratch-subtitle" value="适合6-10岁 | 48节课 | 图形化编程入门">
+                </div>
+                <div class="qa-item">
+                    <label>课程描述（什么是Scratch）</label>
+                    <textarea id="scratch-desc">Scratch是MIT麻省理工学院Media Lab于2007年开发的少儿编程工具，全球190多个国家/地区、超1.5亿孩子使用。</textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>❓ 家长Q&A（20题）</h3>
+                <div id="scratch-qa-list"></div>
+            </div>
+
+            <div class="section">
+                <h3>💰 价格体系</h3>
+                <div class="price-grid">
+                    <div class="price-item">
+                        <label>体验班价格</label>
+                        <input type="text" id="scratch-price1" value="¥880">
+                    </div>
+                    <div class="price-item">
+                        <label>标准班价格</label>
+                        <input type="text" id="scratch-price2" value="¥2580">
+                    </div>
+                    <div class="price-item">
+                        <label>进阶班价格</label>
+                        <input type="text" id="scratch-price3" value="¥4800">
+                    </div>
+                    <div class="price-item">
+                        <label>全年班价格</label>
+                        <input type="text" id="scratch-price4" value="¥6800">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🗣️ 咨询话术</h3>
+                <div class="qa-item">
+                    <label>接待话术</label>
+                    <textarea id="scratch-speech1">家长您好！欢迎来到乐造AI！我是今天的课程顾问老师。您是给孩子咨询编程课吗？孩子多大了？</textarea>
+                </div>
+                <div class="qa-item">
+                    <label>课程介绍话术</label>
+                    <textarea id="scratch-speech2">我们Scratch课是引进的美国麻省理工学院教材，全球1.5亿孩子在用。孩子不用写代码，像搭积木一样拖动积木块就能学会编程。</textarea>
+                </div>
+                <div class="qa-item">
+                    <label>处理异议话术</label>
+                    <textarea id="scratch-speech3">理解您的想法。2580元16次课，平均每节才160元。现在请个家教每小时都要200元。我们还赠送价值199元的课后辅导，相当于白赚。</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Python课程编辑 -->
+        <div id="course-python" class="course-content hidden">
+            <div class="section">
+                <h3>📝 课程介绍</h3>
+                <div class="qa-item">
+                    <label>课程名称</label>
+                    <input type="text" id="python-title" value="Python编程">
+                </div>
+                <div class="qa-item">
+                    <label>副标题</label>
+                    <input type="text" id="python-subtitle" value="适合10岁以上 | 60节课 | 代码编程入门">
+                </div>
+                <div class="qa-item">
+                    <label>课程描述</label>
+                    <textarea id="python-desc">Python是一种简洁优雅的编程语言，被广泛应用于AI人工智能、数据分析、网站开发等领域。谷歌、NASA、Netflix等巨头都在使用Python。</textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>💰 价格体系</h3>
+                <div class="price-grid">
+                    <div class="price-item">
+                        <label>体验班价格</label>
+                        <input type="text" id="python-price1" value="¥980">
+                    </div>
+                    <div class="price-item">
+                        <label>标准班价格</label>
+                        <input type="text" id="python-price2" value="¥2980">
+                    </div>
+                    <div class="price-item">
+                        <label>进阶班价格</label>
+                        <input type="text" id="python-price3" value="¥5580">
+                    </div>
+                    <div class="price-item">
+                        <label>竞赛班价格</label>
+                        <input type="text" id="python-price4" value="¥9800">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 乐高大颗粒 -->
+        <div id="course-lego-duplo" class="course-content hidden">
+            <div class="section">
+                <h3>📝 课程介绍</h3>
+                <div class="qa-item">
+                    <label>课程名称</label>
+                    <input type="text" id="lego-duplo-title" value="乐高大颗粒">
+                </div>
+                <div class="qa-item">
+                    <label>副标题</label>
+                    <input type="text" id="lego-duplo-subtitle" value="适合3-5岁 | 40节课 | 幼儿启蒙">
+                </div>
+            </div>
+            <div class="section">
+                <h3>💰 价格体系</h3>
+                <div class="price-grid">
+                    <div class="price-item">
+                        <label>体验班价格</label>
+                        <input type="text" id="lego-duplo-price1" value="¥680">
+                    </div>
+                    <div class="price-item">
+                        <label>标准班价格</label>
+                        <input type="text" id="lego-duplo-price2" value="¥1980">
+                    </div>
+                    <div class="price-item">
+                        <label>全年班价格</label>
+                        <input type="text" id="lego-duplo-price3" value="¥5280">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 乐高WeDo -->
+        <div id="course-lego-wedo" class="course-content hidden">
+            <div class="section">
+                <h3>📝 课程介绍</h3>
+                <div class="qa-item">
+                    <label>课程名称</label>
+                    <input type="text" id="lego-wedo-title" value="乐高WeDo">
+                </div>
+                <div class="qa-item">
+                    <label>副标题</label>
+                    <input type="text" id="lego-wedo-subtitle" value="适合6-8岁 | 48节课 | 机器人编程">
+                </div>
+            </div>
+            <div class="section">
+                <h3>💰 价格体系</h3>
+                <div class="price-grid">
+                    <div class="price-item">
+                        <label>体验班价格</label>
+                        <input type="text" id="lego-wedo-price1" value="¥780">
+                    </div>
+                    <div class="price-item">
+                        <label>标准班价格</label>
+                        <input type="text" id="lego-wedo-price2" value="¥2380">
+                    </div>
+                    <div class="price-item">
+                        <label>进阶班价格</label>
+                        <input type="text" id="lego-wedo-price3" value="¥4380">
+                    </div>
+                    <div class="price-item">
+                        <label>竞赛班价格</label>
+                        <input type="text" id="lego-wedo-price4" value="¥7380">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 网站设置 -->
+        <div id="course-settings" class="course-content hidden">
+            <div class="section">
+                <h3>⚙️ 网站设置</h3>
+                <div class="qa-item">
+                    <label>网站标题</label>
+                    <input type="text" id="site-title" value="乐造内部培训 - 员工话术手册">
+                </div>
+                <div class="qa-item">
+                    <label>机构名称</label>
+                    <input type="text" id="org-name" value="乐造AI少儿编程">
+                </div>
+                <div class="qa-item">
+                    <label>联系方式</label>
+                    <input type="text" id="contact" value="电话：xxx-xxxx-xxxx">
+                </div>
+            </div>
+            <div class="section">
+                <h3>🔐 修改密码</h3>
+                <div class="qa-item">
+                    <label>新密码</label>
+                    <input type="password" id="new-password" placeholder="留空则不修改">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 默认密码
+        const DEFAULT_PASSWORD = 'lezao2026';
+        
+        // Q&A数据模板
+        const defaultQA = [
+            {q: '孩子才6岁，能学会吗？', a: '完全没问题！Scratch就是专门为6-12岁孩子设计的。'},
+            {q: '学这个到底有什么用？', a: '锻炼三大核心能力：逻辑思维、创造力、表达能力。'},
+            {q: '学费多少钱？', a: '2580元/16次课，平均每节课才160元。'},
+            {q: '能否先试学？', a: '可以试学2次课，体验后再决定。'},
+            {q: '老师专业吗？', a: '所有老师均持有教师资格证，3年以上教学经验。'}
+        ];
+
+        // 初始化
+        function init() {
+            loadData();
+            renderQA('scratch');
+        }
+
+        // 检查密码
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            const stored = localStorage.getItem('lezao_password') || DEFAULT_PASSWORD;
+            if (input === stored) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('adminHeader').style.display = 'flex';
+                document.getElementById('adminContent').style.display = 'block';
+                init();
+            } else {
+                alert('密码错误！');
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('adminHeader').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'none';
+        }
+
+        // 切换课程
+        function switchCourse(course) {
+            document.querySelectorAll('.course-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.course-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('course-' + course).classList.remove('hidden');
+            if (course === 'scratch') renderQA('scratch');
+        }
+
+        // 渲染Q&A
+        function renderQA(course) {
+            const data = getCourseData(course);
+            const list = document.getElementById(course + '-qa-list');
+            if (!list) return;
+            
+            list.innerHTML = data.qa.map((item, i) => `
+                <div class="qa-item">
+                    <label>问题 ${i+1}</label>
+                    <input type="text" value="${item.q}" onchange="updateQA('${course}', ${i}, 'q', this.value)">
+                    <label style="margin-top:10px;">答案 ${i+1}</label>
+                    <textarea onchange="updateQA('${course}', ${i}, 'a', this.value)">${item.a}</textarea>
+                </div>
+            `).join('');
+        }
+
+        // 更新Q&A
+        function updateQA(course, index, field, value) {
+            const data = getCourseData(course);
+            data.qa[index][field] = value;
+            saveToLocal(course, data);
+        }
+
+        // 获取课程数据
+        function getCourseData(course) {
+            const stored = localStorage.getItem('lezao_data_' + course);
+            if (stored) return JSON.parse(stored);
+            return {
+                title: '',
+                subtitle: '',
+                desc: '',
+                qa: [...defaultQA],
+                prices: ['', '', '', ''],
+                speeches: ['', '', '']
+            };
+        }
+
+        // 保存到localStorage
+        function saveToLocal(course, data) {
+            localStorage.setItem('lezao_data_' + course, JSON.stringify(data));
+        }
+
+        // 加载数据
+        function loadData() {
+            ['scratch', 'python', 'lego-duplo', 'lego-wedo'].forEach(course => {
+                const data = getCourseData(course);
+                document.getElementById(course + '-title') && (document.getElementById(course + '-title').value = data.title);
+                document.getElementById(course + '-subtitle') && (document.getElementById(course + '-subtitle').value = data.subtitle);
+                document.getElementById(course + '-desc') && (document.getElementById(course + '-desc').value = data.desc);
+                
+                // 价格
+                if (data.prices) {
+                    data.prices.forEach((p, i) => {
+                        const el = document.getElementById(course + '-price' + (i+1));
+                        if (el) el.value = p;
+                    });
+                }
+            });
+        }
+
+        // 保存数据
+        function saveData() {
+            const msgBox = document.getElementById('msgBox');
+            
+            // 保存修改的密码
+            const newPass = document.getElementById('new-password').value;
+            if (newPass) {
+                localStorage.setItem('lezao_password', newPass);
+            }
+
+            // 保存各课程数据
+            ['scratch', 'python', 'lego-duplo', 'lego-wedo'].forEach(course => {
+                const data = {
+                    title: document.getElementById(course + '-title')?.value || '',
+                    subtitle: document.getElementById(course + '-subtitle')?.value || '',
+                    desc: document.getElementById(course + '-desc')?.value || '',
+                    qa: getCourseData(course).qa,
+                    prices: [
+                        document.getElementById(course + '-price1')?.value || '',
+                        document.getElementById(course + '-price2')?.value || '',
+                        document.getElementById(course + '-price3')?.value || '',
+                        document.getElementById(course + '-price4')?.value || ''
+                    ],
+                    speeches: [
+                        document.getElementById(course + '-speech1')?.value || '',
+                        document.getElementById(course + '-speech2')?.value || '',
+                        document.getElementById(course + '-speech3')?.value || ''
+                    ]
+                };
+                saveToLocal(course, data);
+            });
+
+            msgBox.className = 'msg success';
+            msgBox.textContent = '✅ 数据已保存到浏览器！提示：此为演示版，真正的推送功能需要配置GitHub Token。';
+            
+            setTimeout(() => msgBox.className = 'msg', 5000);
+        }
+    </script>
+</body>
+</html>
