@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>乐造内部培训 - 员工话术手册</title>
+    <title id="page-title">加载中...</title>
+    <link rel="stylesheet" href="themes.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header class="header">
         <div class="container">
-            <h1>🏫 乐造AI 内部培训</h1>
+            <h1>🏫 <span id="org-name">加载中...</span></h1>
             <p class="subtitle">员工话术手册 - 课程顾问必备</p>
         </div>
     </header>
@@ -17,55 +18,32 @@
     <main class="container">
         <section class="intro">
             <h2>欢迎使用乐造内部培训系统</h2>
-            <p>本系统包含4门核心课程的完整培训资料，帮助你快速掌握课程介绍、家长问答、咨询话术等必备技能。</p>
+            <p>本系统包含<span id="course-count">0</span>门核心课程的完整培训资料，帮助你快速掌握课程介绍、家长问答、咨询话术等必备技能。</p>
         </section>
 
         <section class="courses">
             <h2>📚 课程体系</h2>
-            <div class="course-grid">
-                <a href="scratch.html" class="course-card">
-                    <div class="course-icon">🖥️</div>
-                    <h3>Scratch编程</h3>
-                    <p>6-10岁 | 48节课</p>
-                    <span class="tag">图形化编程</span>
-                </a>
-                <a href="python.html" class="course-card">
-                    <div class="course-icon">🐍</div>
-                    <h3>Python编程</h3>
-                    <p>10岁以上 | 60节课</p>
-                    <span class="tag">代码编程</span>
-                </a>
-                <a href="lego-duplo.html" class="course-card">
-                    <div class="course-icon">🧱</div>
-                    <h3>乐高大颗粒</h3>
-                    <p>3-5岁 | 40节课</p>
-                    <span class="tag">幼儿启蒙</span>
-                </a>
-                <a href="lego-wedo.html" class="course-card">
-                    <div class="course-icon">🤖</div>
-                    <h3>乐高WeDo</h3>
-                    <p>6-8岁 | 48节课</p>
-                    <span class="tag">机器人编程</span>
-                </a>
+            <div class="course-grid" id="course-grid">
+                <!-- 课程卡片由 JavaScript 动态生成 -->
             </div>
         </section>
 
         <section class="quick-links">
             <h2>⚡ 快速入口</h2>
             <div class="link-grid">
-                <div class="link-card">
+                <div class="link-card" onclick="showCourse('scratch')">
                     <h3>📝 家长Q&A</h3>
-                    <p>20道常见问题标准答案</p>
+                    <p>常见问题标准答案</p>
                 </div>
-                <div class="link-card">
+                <div class="link-card" onclick="showCourse('scratch')">
                     <h3>🗣️ 咨询话术</h3>
                     <p>接待、介绍、异议处理</p>
                 </div>
-                <div class="link-card">
+                <div class="link-card" onclick="showCourse('python')">
                     <h3>💰 价格体系</h3>
                     <p>套餐与优惠政策</p>
                 </div>
-                <div class="link-card">
+                <div class="link-card" onclick="showCourse('lego-wedo')">
                     <h3>📖 课程大纲</h3>
                     <p>详细课时安排</p>
                 </div>
@@ -73,10 +51,184 @@
         </section>
     </main>
 
+详情弹窗 -->
+    <div id    <!-- 课程="course-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modal-body">
+                <!-- 课程详情由 JavaScript 动态生成 -->
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
         <div class="container">
-            <p>© 2026 乐造AI少儿编程 | 内部资料，请勿外传</p>
+            <p>© 2026 <span id="footer-org">加载中...</span> | 内部资料，请勿外传</p>
         </div>
     </footer>
+
+    <!-- 引入数据文件 -->
+    <script src="data.js"></script>
+    
+    <script>
+        // 初始化页面
+        function init() {
+            // 优先从 localStorage 读取数据
+            const savedData = localStorage.getItem('lezao_site_data');
+            if (savedData) {
+                try {
+                    siteData = JSON.parse(savedData);
+                } catch(e) {
+                    console.log('读取保存数据失败，使用默认数据');
+                }
+            }
+            
+            // 应用主题
+            const theme = (siteData.site && siteData.site.theme) || 'orange';
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            // 设置网站基本信息
+            document.getElementById('page-title').textContent = siteData.site.title;
+            document.getElementById('org-name').textContent = siteData.site.orgName;
+            document.getElementById('footer-org').textContent = siteData.site.orgName;
+            
+            // 设置课程数量
+            const courseCount = Object.keys(siteData.courses).length;
+            document.getElementById('course-count').textContent = courseCount;
+            
+            // 渲染课程卡片
+            renderCourseGrid();
+        }
+
+        // 渲染课程网格
+        function renderCourseGrid() {
+            const grid = document.getElementById('course-grid');
+            const courses = siteData.courses;
+            
+            let html = '';
+            for (const key in courses) {
+                const course = courses[key];
+                html += `
+                    <a href="javascript:void(0)" class="course-card" onclick="showCourse('${course.id}')">
+                        <div class="course-icon">${course.icon}</div>
+                        <h3>${course.title}</h3>
+                        <p>${course.subtitle}</p>
+                        <span class="tag">${getTagById(course.id)}</span>
+                    </a>
+                `;
+            }
+            grid.innerHTML = html;
+        }
+
+        // 根据课程ID获取标签
+        function getTagById(id) {
+            const tags = {
+                'scratch': '图形化编程',
+                'python': '代码编程',
+                'lego-duplo': '幼儿启蒙',
+                'lego-wedo': '机器人编程'
+            };
+            return tags[id] || '其他';
+        }
+
+        // 显示课程详情
+        function showCourse(courseId) {
+            const course = siteData.courses[courseId];
+            if (!course) return;
+            
+            const modal = document.getElementById('modal-body');
+            
+            let html = `
+                <div class="course-detail">
+                    <div class="detail-header">
+                        <span class="detail-icon">${course.icon}</span>
+                        <div>
+                            <h2>${course.title}</h2>
+                            <p class="detail-subtitle">${course.subtitle}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>📝 课程介绍</h3>
+                        <p class="course-desc">${course.desc}</p>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>❓ 家长Q&A</h3>
+                        <div class="qa-list">
+            `;
+            
+            course.qa.forEach((item, index) => {
+                html += `
+                    <div class="qa-item">
+                        <p class="qa-q"><strong>Q${index + 1}：</strong>${item.q}</p>
+                        <p class="qa-a"><strong>A：</strong>${item.a}</p>
+                    </div>
+                `;
+            });
+            
+            html += `
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>💰 价格体系</h3>
+                        <div class="price-grid">
+            `;
+            
+            course.prices.forEach((price, index) => {
+                const label = course.priceLabels ? course.priceLabels[index] : `方案${index + 1}`;
+                html += `
+                    <div class="price-card">
+                        <span class="price-label">${label}</span>
+                        <span class="price-value">${price}</span>
+                    </div>
+                `;
+            });
+            
+            html += `
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>🗣️ 咨询话术</h3>
+                        <div class="speech-list">
+                            <div class="speech-item">
+                                <span class="speech-label">接待话术</span>
+                                <p>${course.speech.welcome}</p>
+                            </div>
+                            <div class="speech-item">
+                                <span class="speech-label">课程介绍</span>
+                                <p>${course.speech.intro}</p>
+                            </div>
+                            <div class="speech-item">
+                                <span class="speech-label">处理异议</span>
+                                <p>${course.speech.objection}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.innerHTML = html;
+            document.getElementById('course-modal').style.display = 'block';
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('course-modal').style.display = 'none';
+        }
+
+        // 点击弹窗外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('course-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
 </body>
 </html>
