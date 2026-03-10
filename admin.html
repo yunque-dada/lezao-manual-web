@@ -756,14 +756,27 @@
             }
         }
 
-        // 保存数据（直接存到浏览器）
+        // 保存数据（保存到浏览器 + 生成下载）
         function saveData() {
             collectFormData();
             
             // 保存到 localStorage
             localStorage.setItem('lezao_site_data', JSON.stringify(currentData));
             
-            showMsg('success', '✅ 已保存！刷新前台页面即可看到更新效果。');
+            // 生成 data.js 内容
+            const content = '// 乐造网站数据\n// 修改这里可以更新网站内容\n\nvar siteData = ' + 
+                JSON.stringify(currentData, null, 4) + ';\n';
+            
+            // 创建下载链接
+            const blob = new Blob([content], {type: 'text/javascript'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'data.js';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMsg('success', '✅ 已保存！请下载 data.js，上传到 GitHub 即可上线。');
         }
 
         // 显示消息
